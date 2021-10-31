@@ -64,11 +64,18 @@ public class orderAdapter extends RecyclerView.Adapter<orderAdapter.ViewHolder> 
         holder.cancelOrder.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                ProgressDialog progressDialog = new ProgressDialog(view.getRootView().getContext(), R.style.MyAlertDialogStyle);
+                progressDialog.setMax(100);
+                progressDialog.setMessage("Please wait!");
+                progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                progressDialog.show();
+
                 APIinterface apIinterface = myRetro.getretrofit(context).create(APIinterface.class);
                 Call<String> c = apIinterface.cancelOrdr(Integer.parseInt(model.getId()));
                 c.enqueue(new Callback<String>() {
                     @Override
                     public void onResponse(Call<String> call, Response<String> response) {
+                        progressDialog.dismiss();
                         if (!response.body().equals("done"))
                             Toast.makeText(context, "Can't remove!", Toast.LENGTH_SHORT).show();
                         else {
@@ -84,6 +91,7 @@ public class orderAdapter extends RecyclerView.Adapter<orderAdapter.ViewHolder> 
                     }
                     @Override
                     public void onFailure(Call<String> call, Throwable t) {
+                        progressDialog.dismiss();
                         Log.d("gilog", "Remove order : " + t.toString());
                         Toast.makeText(context, "Error!", Toast.LENGTH_SHORT).show();
                     }

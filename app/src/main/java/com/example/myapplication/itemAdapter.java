@@ -2,6 +2,7 @@ package com.example.myapplication;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -91,8 +92,9 @@ public class itemAdapter extends RecyclerView.Adapter<itemAdapter.ViewHolder> {
                         holder.addMoreLayout.setVisibility(View.GONE);
                         holder.itemSelect.setVisibility(View.VISIBLE);
                         holder.itemNotes.setEnabled(false);
-                        holder.itemNotes.setText("Notes");
-                        holder.itemNotes.setTextColor(Color.GRAY);
+                        holder.itemNotes.setHint("Notes");
+                        holder.itemNotes.setText("");
+                        holder.itemNotes.setHintTextColor(Color.GRAY);
                         holder.itemNotes.setBackgroundResource(R.color.lightBlk);
                     }
                     model.setQnty(n + "");
@@ -109,6 +111,7 @@ public class itemAdapter extends RecyclerView.Adapter<itemAdapter.ViewHolder> {
                 holder.itemNotes.setBackgroundResource(R.color.main);
                 holder.itemNotes.setHintTextColor(Color.WHITE);
                 holder.itemNotes.setTextColor(Color.WHITE);
+                model.setItemNotes("");
                 holder.itemSelect.setVisibility(View.GONE);
                 itemQnty.setText(1 + "");
                 model.setQnty(1 + "");
@@ -126,6 +129,7 @@ public class itemAdapter extends RecyclerView.Adapter<itemAdapter.ViewHolder> {
                 alertDialog.show();
 
                 EditText note = view1.findViewById(R.id.noteAdd);
+                note.setText(holder.itemNotes.getText());
                 Button addNoteBtn = view1.findViewById(R.id.addNoteBtn);
                 addNoteBtn.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -142,6 +146,11 @@ public class itemAdapter extends RecyclerView.Adapter<itemAdapter.ViewHolder> {
         orderBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                ProgressDialog progressDialog = new ProgressDialog(view.getRootView().getContext(), R.style.MyAlertDialogStyle);
+                progressDialog.setMax(100);
+                progressDialog.setMessage("Please wait!");
+                progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                progressDialog.show();
                 APIinterface apIinterface = myRetro.getretrofit(context).create(APIinterface.class);
                 for (int i = 0; i < getItemCount(); i++) {
                     if (Integer.parseInt(itemsModelArrayList.get(i).getQnty()) > 0) {
@@ -154,6 +163,7 @@ public class itemAdapter extends RecyclerView.Adapter<itemAdapter.ViewHolder> {
                                     call1.enqueue(new Callback<String>() {
                                         @Override
                                         public void onResponse(Call<String> call, Response<String> response) {
+                                            Log.d("gilog", "Res tabStatus : " + response.body());
                                             if (response.body().equals("error"))
                                                 Toast.makeText(context, "Failed!", Toast.LENGTH_SHORT).show();
                                         }
@@ -164,16 +174,17 @@ public class itemAdapter extends RecyclerView.Adapter<itemAdapter.ViewHolder> {
                                             Toast.makeText(context, "Error!", Toast.LENGTH_SHORT).show();
                                         }
                                     });
+                                    progressDialog.dismiss();
                                     Intent intent = new Intent(context, orderScreen.class);
                                     intent.putExtra("tabName", tableName);
                                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                                     context.startActivity(intent);
-
                                 }
                             }
 
                             @Override
                             public void onFailure(Call<String> call, Throwable t) {
+                                progressDialog.dismiss();
                                 Toast.makeText(context, "Error!", Toast.LENGTH_SHORT).show();
                                 Log.d("gilog", "Add Order : " + t.toString());
                             }
