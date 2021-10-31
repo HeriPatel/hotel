@@ -54,7 +54,6 @@ public class orderAdapter extends RecyclerView.Adapter<orderAdapter.ViewHolder> 
         itemQnty.setText(model.getQnty());
         float price = Float.parseFloat(model.getQnty()) * Float.parseFloat(model.getPrice());
         orderTotal += price;
-//        Log.d("gilog", "Total : " + orderTotal);
         holder.itemName.setText(model.getName());
         holder.itemDes.setText(model.getDes());
         holder.itemPrice.setText(model.getPrice() + "/-");
@@ -83,7 +82,6 @@ public class orderAdapter extends RecyclerView.Adapter<orderAdapter.ViewHolder> 
                             orderTotalTxt.setText("Total : " + orderTotal + "/-");
                         }
                     }
-
                     @Override
                     public void onFailure(Call<String> call, Throwable t) {
                         Log.d("gilog", "Remove order : " + t.toString());
