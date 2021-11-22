@@ -50,7 +50,7 @@ public class items extends AppCompatActivity {
         progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progressDialog.show();
 
-        retrofit = myRetro.getretrofit(this);
+        retrofit = myRetro.getretrofit(getResources().getString(R.string.url));
         apIinterface = retrofit.create(APIinterface.class);
         Call<ArrayList<itemsModel>> c = apIinterface.getItems(name);
         c.enqueue(new Callback<ArrayList<itemsModel>>() {

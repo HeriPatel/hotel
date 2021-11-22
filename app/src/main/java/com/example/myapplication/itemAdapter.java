@@ -2,11 +2,14 @@ package com.example.myapplication;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.NotificationManager;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
+import android.os.Message;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -29,8 +32,11 @@ import androidx.annotation.RequiresApi;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.RemoteMessage;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -43,6 +49,7 @@ public class itemAdapter extends RecyclerView.Adapter<itemAdapter.ViewHolder> {
     Button orderBtn;
     String tableName;
     AlertDialog.Builder builder;
+    ArrayList<itemsModel> remainingOrder;
 
     public itemAdapter(Context context, ArrayList<itemsModel> itemsModelArrayList, Button orderBtn, String tableName) {
         this.context = context;
@@ -151,19 +158,73 @@ public class itemAdapter extends RecyclerView.Adapter<itemAdapter.ViewHolder> {
                 progressDialog.setMessage("Please wait!");
                 progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
                 progressDialog.show();
-                APIinterface apIinterface = myRetro.getretrofit(context).create(APIinterface.class);
+
+                APIinterface apIinterface = myRetro.getretrofit(context.getResources().getString(R.string.url)).create(APIinterface.class);
                 for (int i = 0; i < getItemCount(); i++) {
                     if (Integer.parseInt(itemsModelArrayList.get(i).getQnty()) > 0) {
                         Call<String> c = apIinterface.addOrder(itemsModelArrayList.get(i).getName(), tableName, itemsModelArrayList.get(i).getQnty(), itemsModelArrayList.get(i).getItemNotes());
+                        int finalI = i;
                         c.enqueue(new Callback<String>() {
                             @Override
                             public void onResponse(Call<String> call, Response<String> response) {
-                                if (response.body().equals("done")) {
+                                if (!response.body().equals("error")) {
+                                    String orderId = response.body();
+                                    //Notification
+                                    APIinterface apIinterface1 = myRetro.getretrofit(context.getResources().getString(R.string.url)).create(APIinterface.class);
+                                    apIinterface1.getChefId().enqueue(new Callback<String>() {
+                                        @Override
+                                        public void onResponse(Call<String> call, Response<String> response) {
+                                            if (!response.body().equals("Error!")) {
+                                                Integer chefID = Integer.valueOf(response.body());
+                                                apIinterface1.getKey(chefID).enqueue(new Callback<String>() {
+                                                    @Override
+                                                    public void onResponse(Call<String> call, Response<String> response) {
+                                                        String usertoken = response.body();
+                                                        if (usertoken == null) {
+//                                                            remainingOrder.add(itemsModelArrayList.get(finalI));
+//                                                            Log.d("gilog","Remain order : "+remainingOrder);
+                                                            apIinterface1.addDummyOrder(Integer.parseInt(orderId)).enqueue(new Callback<String>() {
+                                                                @Override
+                                                                public void onResponse(Call<String> call, Response<String> response) {
+                                                                    Log.d("gilog","Res in add dummy order : "+response.body());
+                                                                }
+
+                                                                @Override
+                                                                public void onFailure(Call<String> call, Throwable t) {
+                                                                    Toast.makeText(context, "Error!", Toast.LENGTH_SHORT).show();
+                                                                    Log.d("gilog","Error in add dummy order : "+t.toString());
+                                                                }
+                                                            });
+                                                            Toast.makeText(context, "No chef is available!", Toast.LENGTH_SHORT).show();
+                                                        } else {
+                                                            /*Log.d("gilog","name : "+itemsModelArrayList.get(finalI).getName());
+                                                            Log.d("gilog","order id : "+Integer.parseInt(orderId));
+                                                            Log.d("gilog","cheg Id : "+chefID);*/
+                                                            sendNotifications(usertoken, "Order", itemsModelArrayList.get(finalI).getName(), Integer.parseInt(orderId), chefID);
+                                                        }
+                                                    }
+
+                                                    @Override
+                                                    public void onFailure(Call<String> call, Throwable t) {
+                                                        Toast.makeText(context, "Notification not sent!", Toast.LENGTH_SHORT).show();
+                                                        Log.d("gilog", "Notification : " + t.toString());
+                                                    }
+                                                });
+                                            } else
+                                                Toast.makeText(context, "No chef is Available!", Toast.LENGTH_SHORT).show();
+                                        }
+
+                                        @Override
+                                        public void onFailure(Call<String> call, Throwable t) {
+                                            Toast.makeText(context, "Error!", Toast.LENGTH_SHORT).show();
+                                            Log.d("gilog", "Error in getting Available chef : " + t.toString());
+                                        }
+                                    });
+
                                     Call<String> call1 = apIinterface.changeTabStatus(tableName, "Reserved");
                                     call1.enqueue(new Callback<String>() {
                                         @Override
                                         public void onResponse(Call<String> call, Response<String> response) {
-                                            Log.d("gilog", "Res tabStatus : " + response.body());
                                             if (response.body().equals("error"))
                                                 Toast.makeText(context, "Failed!", Toast.LENGTH_SHORT).show();
                                         }
@@ -175,6 +236,7 @@ public class itemAdapter extends RecyclerView.Adapter<itemAdapter.ViewHolder> {
                                         }
                                     });
                                     progressDialog.dismiss();
+
                                     Intent intent = new Intent(context, orderScreen.class);
                                     intent.putExtra("tabName", tableName);
                                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -191,6 +253,56 @@ public class itemAdapter extends RecyclerView.Adapter<itemAdapter.ViewHolder> {
                         });
                     }
                 }
+            }
+        });
+    }
+
+    private void sendNotifications(String usertoken, String msg, String order, int orderId, Integer chefId) {
+        APIinterface apIinterface1 = myRetro.getretrofit(context.getResources().getString(R.string.url)).create(APIinterface.class);
+        apIinterface1.addChef(orderId, chefId).enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(Call<String> call, Response<String> response) {
+                apIinterface1.changeChefStatus(chefId, "Occupied").enqueue(new Callback<String>() {
+                    @Override
+                    public void onResponse(Call<String> call, Response<String> response) {
+//                        Log.d("gilog", "Chef status change : " + response.body());
+                    }
+
+                    @Override
+                    public void onFailure(Call<String> call, Throwable t) {
+                        Toast.makeText(context, "Error!", Toast.LENGTH_SHORT).show();
+                        Log.d("gilog", "Error in chef status change : " + t.toString());
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(Call<String> call, Throwable t) {
+                Toast.makeText(context, "Error!", Toast.LENGTH_SHORT).show();
+                Log.d("gilog", "Error in adding chef id : " + t.toString());
+            }
+        });
+
+        Data data = new Data(msg, order);
+        NotificationSender sender = new NotificationSender(data, usertoken);
+        APIinterface apIinterface = Client_sendNoti.getClient("https://fcm.googleapis.com/").create(APIinterface.class);
+        apIinterface.sendNotifcation(sender).enqueue(new Callback<MyResponse>() {
+            @Override
+            public void onResponse(Call<MyResponse> call, Response<MyResponse> response) {
+//                Log.d("gilog", "in notify res : " + response.body().success);
+                if (response.code() == 200) {
+                    if (response.body().success != 1) {
+                        Toast.makeText(context, "Failed ", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(context, "Notification sent!", Toast.LENGTH_SHORT).show();
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<MyResponse> call, Throwable t) {
+                Log.d("gilog", "In Notify " + t.toString());
+                Toast.makeText(context, "Notification not sent!", Toast.LENGTH_SHORT).show();
             }
         });
     }

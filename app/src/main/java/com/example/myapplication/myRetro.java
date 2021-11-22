@@ -1,6 +1,7 @@
 package com.example.myapplication;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -10,9 +11,9 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class myRetro {
     private static Retrofit r = null;
-    public static Retrofit getretrofit(Context c)
+    public static Retrofit getretrofit(String url)
     {
-        String url = c.getResources().getString(R.string.url);
+//        String url = c.getResources().getString(R.string.url);
         if (r == null){
             Gson gson = new GsonBuilder()
                     .setLenient()

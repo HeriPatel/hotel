@@ -49,7 +49,7 @@ public class orderScreen extends AppCompatActivity {
         progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progressDialog.show();
 
-        retrofit = myRetro.getretrofit(this);
+        retrofit = myRetro.getretrofit(getResources().getString(R.string.url));
         apIinterface = retrofit.create(APIinterface.class);
         Call<ArrayList<itemsModel>> c = apIinterface.getOrder(tableName);
         c.enqueue(new Callback<ArrayList<itemsModel>>() {
@@ -95,7 +95,7 @@ public class orderScreen extends AppCompatActivity {
         progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progressDialog.show();
 
-        retrofit = myRetro.getretrofit(this);
+        retrofit = myRetro.getretrofit(getResources().getString(R.string.url));
         apIinterface = retrofit.create(APIinterface.class);
         Call<String> c = apIinterface.completeOrder(tableName);
         c.enqueue(new Callback<String>() {

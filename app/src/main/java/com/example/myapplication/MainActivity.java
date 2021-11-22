@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity implements tabStatusAdapter.
             sliderLayout.addSliderView(sliderView);
         }
 
-        retrofit = myRetro.getretrofit(this);
+        retrofit = myRetro.getretrofit(getResources().getString(R.string.url));
         apIinterface = retrofit.create(APIinterface.class);
         Call<ArrayList<tabStatusModel>> c = apIinterface.getTables();
         c.enqueue(new Callback<ArrayList<tabStatusModel>>() {
@@ -104,27 +104,4 @@ public class MainActivity extends AppCompatActivity implements tabStatusAdapter.
             finish();
         }
     }
-
-    /*@Override
-    public void onTabLongClick(int position) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setMessage("Do you want to change table status to Available?").setCancelable(false)
-        .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                finish();
-                Toast.makeText(MainActivity.this, "Available!", Toast.LENGTH_SHORT).show();
-            }
-        })
-        .setNegativeButton("No", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                dialogInterface.cancel();
-                Toast.makeText(MainActivity.this, "Not Available!", Toast.LENGTH_SHORT).show();
-            }
-        });
-        AlertDialog alertDialog = builder.create();
-        alertDialog.setTitle("Change Table Status");
-        alertDialog.show();
-    }*/
 }

@@ -70,7 +70,7 @@ public class orderAdapter extends RecyclerView.Adapter<orderAdapter.ViewHolder> 
                 progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
                 progressDialog.show();
 
-                APIinterface apIinterface = myRetro.getretrofit(context).create(APIinterface.class);
+                APIinterface apIinterface = myRetro.getretrofit(context.getResources().getString(R.string.url)).create(APIinterface.class);
                 Call<String> c = apIinterface.cancelOrdr(Integer.parseInt(model.getId()));
                 c.enqueue(new Callback<String>() {
                     @Override
@@ -94,6 +94,7 @@ public class orderAdapter extends RecyclerView.Adapter<orderAdapter.ViewHolder> 
                         progressDialog.dismiss();
                         Log.d("gilog", "Remove order : " + t.toString());
                         Toast.makeText(context, "Error!", Toast.LENGTH_SHORT).show();
+ 
                     }
                 });
             }

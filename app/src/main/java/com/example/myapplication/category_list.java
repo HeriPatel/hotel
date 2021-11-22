@@ -43,7 +43,7 @@ public class category_list extends AppCompatActivity implements categoryAdapter.
         progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progressDialog.show();
 
-        rCat = myRetro.getretrofit(this);
+        rCat = myRetro.getretrofit(getResources().getString(R.string.url));
         api = rCat.create(APIinterface.class);
         Call<ArrayList<categoryModel>> c = api.getCategory();
         c.enqueue(new Callback<ArrayList<categoryModel>>() {
@@ -62,13 +62,6 @@ public class category_list extends AppCompatActivity implements categoryAdapter.
                 Log.d("gilog", "Category List : " + t.toString());
             }
         });
-    }
-
-    @Override
-    public void onBackPressed() {
-//        startActivity(new Intent(this,MainActivity.class));
-//        finish();
-        super.onBackPressed();
     }
 
     @Override

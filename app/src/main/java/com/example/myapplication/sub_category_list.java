@@ -49,7 +49,7 @@ public class sub_category_list extends AppCompatActivity implements subCategoryA
         progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
         progressDialog.show();
 
-        retrofit = myRetro.getretrofit(this);
+        retrofit = myRetro.getretrofit(getResources().getString(R.string.url));
         apIinterface = retrofit.create(APIinterface.class);
         Call<ArrayList<subCategoryModel>> c = apIinterface.getSubCategory(CatName);
         c.enqueue(new Callback<ArrayList<subCategoryModel>>() {
